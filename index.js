@@ -1,15 +1,19 @@
+require('dotenv').config()
 const express = require('express');
 const cors = require('cors');
 const jwt = require('jsonwebtoken')
 const cookieParser = require('cookie-parser')
 const app = express();
-require('dotenv').config()
 
 const port = process.env.PORT || 5000;
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 
 app.use(cors({
-    origin: 'http://localhost:5173',
+    origin:[ 
+        'http://localhost:5173',
+        'https://m61-job-portal.web.app',
+        'https://m61-job-portal.firebaseapp.com',
+    ],
     credentials: true
 }));
 app.use(express.json());
@@ -29,8 +33,9 @@ const verifyToken = (req, res, next) => {
     })
 }
 
-// const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.swu9d.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
-const uri = 'mongodb://localhost:27017/'
+const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.eko35.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
+console.log(uri) 
+// const uri = 'mongodb://localhost:27017/'
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
@@ -43,10 +48,10 @@ const client = new MongoClient(uri, {
 
 async function run() {
     try {
-        // Connect the client to the server	(optional starting in v4.7)
-        await client.connect();
-        // Send a ping to confirm a successful connection
-        await client.db("admin").command({ ping: 1 });
+        // // Connect the client to the server	(optional starting in v4.7)
+        // await client.connect();
+        // // Send a ping to confirm a successful connection
+        // await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
 
         // auth related apis
@@ -56,7 +61,8 @@ async function run() {
             res
                 .cookie('anik', token, {
                     httpOnly: true,
-                    secure: false
+                    secure: process.env.NODE_ENV === 'production',
+                    sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
                 })
                 .send({ success: true })
         })
@@ -65,7 +71,8 @@ async function run() {
             res
                 .clearCookie('anik', {
                     httpOnly: true,
-                    secure: false
+                    secure: process.env.NODE_ENV === 'production',
+                    sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
                 })
                 .send({ success: true })
         })
